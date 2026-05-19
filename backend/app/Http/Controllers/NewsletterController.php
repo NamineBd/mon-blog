@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Mail\ConfirmSubscriptionMail;
 
 class NewsletterController extends Controller
 {
@@ -23,9 +24,8 @@ class NewsletterController extends Controller
             'verified_at' => null,
         ]);
 
-        // Envoi d'un email de confirmation (tu dois configurer Mail)
-        // Ici on simule, mais tu peux implémenter avec Mail::send
-        // Mail::to($subscriber->email)->send(new ConfirmSubscriptionMail($subscriber));
+        // Envoi de l'email de confirmation
+        Mail::to($subscriber->email)->send(new ConfirmSubscriptionMail($subscriber));
 
         return response()->json([
             'message' => 'Please check your email to confirm subscription.',
