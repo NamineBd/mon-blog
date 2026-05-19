@@ -15,7 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // SEULEMENT le middleware pour les variables MySQL
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
         //$middleware->appendToGroup('api', \App\Http\Middleware\SetMySQLSessionVariables::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
