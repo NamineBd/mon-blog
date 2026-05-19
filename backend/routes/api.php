@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
+
 /*
 |--------------------------------------------------------------------------
 | ROUTE DE SANTÉ
