@@ -13,51 +13,51 @@ use App\Http\Controllers\NewsletterController;
 | ROUTES PUBLIQUES
 |--------------------------------------------------------------------------
 */
+
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 
 // Newsletter publique
-Route::get('/newsletter/confirm/{id}',         [NewsletterController::class, 'confirm']);
-Route::get('/newsletter/unsubscribe/{token}',  [NewsletterController::class, 'unsubscribe']);
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
+Route::get('/newsletter/confirm/{id}', [NewsletterController::class, 'confirm'])->whereNumber('id');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe']);
 
 /*
 |--------------------------------------------------------------------------
 | ROUTES PROTÉGÉES
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // ── Articles ────────────────────────────────────────────────────────
+    // Articles
     Route::get('/articles', [ArticleController::class, 'index']);
     Route::post('/articles', [ArticleController::class, 'store']);
-    Route::get('/articles/{article}', [ArticleController::class, 'show']);
-    Route::put('/articles/{article}', [ArticleController::class, 'update']);
-    Route::patch('/articles/{article}', [ArticleController::class, 'update']);
-    Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
 
-    // ── Médias (APRÈS les routes articles de base) ───────────────────────
-    Route::post('/articles/{article}/images', [MediaController::class, 'uploadImage']);
-    Route::get('/articles/{article}/images', [MediaController::class, 'articleImages']);
-    Route::delete('/article-images/{image}', [MediaController::class, 'deleteImage']);
+    Route::get('/articles/{id}', [ArticleController::class, 'show'])->whereNumber('id');
+    Route::put('/articles/{id}', [ArticleController::class, 'update'])->whereNumber('id');
+    Route::patch('/articles/{id}', [ArticleController::class, 'update'])->whereNumber('id');
+    Route::delete('/articles/{id}', [ArticleController::class, 'destroy'])->whereNumber('id');
 
-    // ── Commentaires ─────────────────────────────────────────────────────
-    Route::get('/articles/{article}/comments', [CommentController::class, 'index']);
-    Route::post('/articles/{article}/comments', [CommentController::class, 'store']);
-    Route::put('/comments/{comment}', [CommentController::class, 'update']);
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    // Images d’articles
+    Route::post('/articles/{id}/images', [MediaController::class, 'uploadImage'])->whereNumber('id');
+    Route::get('/articles/{id}/images', [MediaController::class, 'articleImages'])->whereNumber('id');
+    Route::delete('/article-images/{id}', [MediaController::class, 'deleteImage'])->whereNumber('id');
 
-    // ── Newsletter ────────────────────────────────────────────────────────
-    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
-    
-    // CORRIGÉ: Utilisation du middleware avec le namespace complet
-    // Si vous n'avez pas enregistré le middleware 'admin' dans bootstrap/app.php,
-    // utilisez le namespace complet à la place:
+    // Commentaires
+    Route::get('/articles/{id}/comments', [CommentController::class, 'index'])->whereNumber('id');
+    Route::post('/articles/{id}/comments', [CommentController::class, 'store'])->whereNumber('id');
+
+    Route::put('/comments/{id}', [CommentController::class, 'update'])->whereNumber('id');
+    Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->whereNumber('id');
+
+    // Admin newsletter
     Route::get('/admin/subscribers', [NewsletterController::class, 'subscribersList'])
-         ->middleware(\App\Http\Middleware\AdminMiddleware::class);
+        ->middleware(\App\Http\Middleware\AdminMiddleware::class);
 });
 
 /*
@@ -65,19 +65,21 @@ Route::middleware('auth:sanctum')->group(function () {
 | ROUTE DE SANTÉ
 |--------------------------------------------------------------------------
 */
+
 Route::get('/health', function () {
     try {
         DB::select('SELECT 1');
+
         return response()->json([
-            'status'    => 'OK',
-            'database'  => 'Connected',
+            'status' => 'OK',
+            'database' => 'Connected',
             'timestamp' => date('Y-m-d H:i:s'),
         ]);
     } catch (\Exception $e) {
         return response()->json([
-            'status'   => 'ERROR',
+            'status' => 'ERROR',
             'database' => 'Disconnected',
-            'error'    => $e->getMessage(),
+            'error' => $e->getMessage(),
         ], 500);
     }
 });
