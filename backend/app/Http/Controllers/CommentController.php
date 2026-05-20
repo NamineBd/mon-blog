@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
+    // commentaires entierement fonctionnel
     // GET /api/articles/{id}/comments
     public function index(Request $request, $id)
     {
