@@ -29,7 +29,8 @@ class ArticleController extends Controller
 
         return response()->json($articles);
     }
-
+    
+    // Pour envoyer un fichier image utiliser multipart/form-data et non application/json
     // POST /api/articles
     public function store(Request $request)
     {
