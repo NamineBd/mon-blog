@@ -8,7 +8,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
-        apiPrefix: 'api',  // pas de préfixe 'api'
+        apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -16,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
-        
-        $middleware->appendToGroup('api', \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
+        // SUPPRIMÉ : EnsureFrontendRequestsAreStateful
+        // Ce middleware est uniquement pour les SPA cookie/session
+        // Ton API utilise des Bearer tokens → il ne faut pas ça
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
