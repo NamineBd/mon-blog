@@ -6,6 +6,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\NewsletterController;
 
 /*
@@ -58,6 +59,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin newsletter
     Route::get('/admin/subscribers', [NewsletterController::class, 'subscribersList'])
         ->middleware(\App\Http\Middleware\AdminMiddleware::class);
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
 });
 
 /*
