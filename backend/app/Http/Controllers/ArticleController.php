@@ -11,18 +11,21 @@ class ArticleController extends Controller
     // GET /api/articles
     public function index(Request $request)
     {
-        $user  = $request->user();
+        $user = $request->user();
+
         $query = Article::with(['user', 'comments.user', 'images']);
 
-        if ($user->is_admin) {
-            // L'admin voit tout
+        if ($user && $user->is_admin) {
             $articles = $query->latest()->paginate(10);
-        } else {
-            // L'utilisateur voit ses articles + les publiés des autres
+        } elseif ($user) {
             $articles = $query->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
-                  ->orWhere('status', 'published');
+                ->orWhere('status', 'published');
             })->latest()->paginate(10);
+        } else {
+            $articles = $query->where('status', 'published')
+                            ->latest()
+                            ->paginate(10);
         }
 
         return response()->json($articles);
@@ -56,8 +59,17 @@ class ArticleController extends Controller
     }
 
     // GET /api/articles/{article}
-    public function show(Article $article)
+    public function show($id)
     {
+        $article = Article::with(['user', 'comments.user', 'images'])->find($id);
+
+        if (!$article) {
+            return response()->json([
+                'message' => 'Article not found',
+                'received_id' => $id,
+            ], 404);
+        }
+
         $user = auth()->user();
 
         $canView = $article->status === 'published'
@@ -68,12 +80,21 @@ class ArticleController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        return response()->json($article->load(['user', 'comments.user', 'images']));
+        return response()->json($article);
     }
 
     // PUT|PATCH /api/articles/{article}
-    public function update(Request $request, Article $article)
+    public function update(Request $request, $id)
     {
+        $article = Article::find($id);
+
+        if (!$article) {
+            return response()->json([
+                'message' => 'Article not found',
+                'received_id' => $id,
+            ], 404);
+        }
+
         if (!$this->canModify($request->user(), $article)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -90,13 +111,16 @@ class ArticleController extends Controller
             if ($article->cover_image) {
                 Storage::disk('public')->delete($article->cover_image);
             }
+
             $validated['cover_image'] = $request->file('cover_image')
-                                                 ->store('covers', 'public');
+                                                ->store('covers', 'public');
         }
 
-        if (isset($validated['status'])
+        if (
+            isset($validated['status'])
             && $validated['status'] === 'published'
-            && $article->status !== 'published') {
+            && $article->status !== 'published'
+        ) {
             $validated['published_at'] = now();
         }
 
@@ -106,8 +130,17 @@ class ArticleController extends Controller
     }
 
     // DELETE /api/articles/{article}
-    public function destroy(Request $request, Article $article)
+    public function destroy(Request $request, $id)
     {
+        $article = Article::with('images')->find($id);
+
+        if (!$article) {
+            return response()->json([
+                'message' => 'Article not found',
+                'received_id' => $id,
+            ], 404);
+        }
+
         if (!$this->canModify($request->user(), $article)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -129,6 +162,11 @@ class ArticleController extends Controller
     // Helper privé — évite de répéter la même condition partout
     private function canModify($user, Article $article): bool
     {
+        if (!$user) {
+            return false;
+        }
+
         return $user->is_admin || $article->user_id === $user->id;
     }
+
 }
