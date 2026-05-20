@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
 {
+    // fait les  operation correctement
     // POST /api/articles/{id}/images
     public function uploadImage(Request $request, $id)
     {
