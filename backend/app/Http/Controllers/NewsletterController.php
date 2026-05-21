@@ -10,6 +10,7 @@ use App\Mail\ConfirmSubscriptionMail;
 
 class NewsletterController extends Controller
 {
+    // Newsletter 
     // POST /api/newsletter/subscribe
     public function subscribe(Request $request)
     {
