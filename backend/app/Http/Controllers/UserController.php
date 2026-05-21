@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     /**
-     * Lister tous les utilisateurs (admin uniquement)
+     * Lister tous les utilisateurs (admin uniquement).
      */
     public function index(Request $request)
     {
