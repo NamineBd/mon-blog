@@ -1,478 +1,394 @@
-# API Documentation – Blog & Newsletter System
+# API Documentation - Blog Laravel
 
-## Introduction
+Base URL : `http://mon-blog.test/api`
 
-This API allows you to manage articles, comments, images, user authentication, and a newsletter subscription system.  
-Authentication is handled via Laravel Sanctum (Bearer token).  
-Some endpoints require admin privileges (is_admin = true).
-
-Base URL: http://your-domain.com/api (adjust to your environment)
+Toutes les routes protégées nécessitent un token d’authentification fourni dans l’en-tête  
+`Authorization: Bearer {token}`.
 
 ---
 
-## Authentication
+## Authentification
 
-| Method | Endpoint          | Description                |
-|--------|-------------------|----------------------------|
-| POST   | /register         | Create a new user account  |
-| POST   | /login            | Login and receive a token  |
-| POST   | /logout           | Revoke current token       |
-| GET    | /me               | Get authenticated user     |
+### Inscription
+`POST /register`
 
-All protected endpoints must include the header:  
-Authorization: Bearer {token}
+**Paramètres (form-data ou JSON)**
 
----
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| name | string | oui | Nom complet |
+| email | string | oui | Email unique |
+| password | string | oui | Minimum 8 caractères |
+| password_confirmation | string | oui | Confirmation du mot de passe |
 
-### 1. Register
-
-POST /api/register
-Content-Type: application/json
-
-Request body:
+**Réponse (201 Created)**
+```json
 {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "secret123",
-    "password_confirmation": "secret123"
-}
-
-Response (201 Created):
-{
-    "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "is_admin": false,
-        "created_at": "2025-01-01T00:00:00.000000Z",
-        "updated_at": "2025-01-01T00:00:00.000000Z"
-    },
-    "token": "1|abcdef..."
-}
-
-### 2. Login
-
-POST /api/login
-Content-Type: application/json
-
-Request body:
-{
-    "email": "john@example.com",
-    "password": "secret123"
-}
-
-Response (200 OK):
-{
-    "message": "Connexion réussie",
-    "token": "1|abcdef...",
-    "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com",
-        "is_admin": false
-    }
-}
-
-### 3. Logout
-
-POST /api/logout
-Authorization: Bearer {token}
-
-Response (200 OK):
-{
-    "message": "Déconnecté"
-}
-
-### 4. Get current user
-
-GET /api/me
-Authorization: Bearer {token}
-
-Response (200 OK):
-{
+  "user": {
     "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "is_admin": false,
-    "created_at": "2025-01-01T00:00:00.000000Z",
-    "updated_at": "2025-01-01T00:00:00.000000Z"
+    "name": "Jean Dupont",
+    "email": "jean@example.com",
+    "is_admin": false
+  },
+  "token": "1|abcdef..."
 }
 
----
+Connexion
+POST /login
 
-## Articles
-
-All article endpoints require authentication.
-
-| Method | Endpoint                    | Description                         |
-|--------|-----------------------------|-------------------------------------|
-| GET    | /articles                   | List articles (paginated)           |
-| POST   | /articles                   | Create a new article                |
-| GET    | /articles/{article}         | Show a single article               |
-| PUT    | /articles/{article}         | Update an article                   |
-| DELETE | /articles/{article}         | Delete an article                   |
-
-### 1. List articles
-
-GET /api/articles?page=1
-Authorization: Bearer {token}
-
-- Admin → sees all articles (draft + published)
-- Normal user → sees own articles (any status) + published articles from others
-
-Response (200 OK): Paginated list of articles with user, comments.user, images relations.
+Paramètres (JSON)
 
 {
-    "current_page": 1,
-    "data": [
-        {
-            "id": 1,
-            "user_id": 1,
-            "title": "My first article",
-            "slug": "my-first-article",
-            "content": "Full content...",
-            "excerpt": "Short summary",
-            "cover_image": "covers/abc.jpg",
-            "status": "published",
-            "published_at": "2025-01-01T10:00:00.000000Z",
-            "created_at": "...",
-            "updated_at": "...",
-            "user": { ... },
-            "comments": [...],
-            "images": [...]
-        }
-    ],
-    "per_page": 10,
-    "total": 25
+  "email": "jean@example.com",
+  "password": "secret"
 }
 
-### 2. Create article
+Réponse (200 OK)
 
-POST /api/articles
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
-
-Request parameters:
-- title (string, required, max 255)
-- content (string, required)
-- excerpt (string, optional)
-- cover_image (file, optional, image max 2MB)
-- status (string, required, draft or published)
-
-If status = published, published_at is set automatically.
-
-Response (201 Created):
 {
-    "id": 2,
-    "user_id": 1,
-    "title": "New article",
-    "slug": "new-article",
-    "content": "...",
-    "excerpt": null,
-    "cover_image": "covers/xyz.jpg",
-    "status": "published",
-    "published_at": "2025-01-02T12:00:00.000000Z",
-    "created_at": "...",
-    "updated_at": "..."
+  "message": "Connexion réussie",
+  "token": "1|abcdef...",
+  "user": {
+    "id": 1,
+    "name": "Jean Dupont",
+    "email": "jean@example.com",
+    "is_admin": false
+  }
 }
 
-### 3. Show single article
+Déconnexion
+POST /logout (protégé)
 
-GET /api/articles/{article}
-Authorization: Bearer {token}
+Réponse (200 OK)
 
-Access rules:
-- Published articles → anyone can view
-- Draft articles → only author or admin
+{ "message": "Déconnecté" }
 
-Response (200 OK): full article with user, comments.user, images.
+Utilisateur courant
+GET /me (protégé)
 
-### 4. Update article
+Réponse (200 OK)
 
-PUT /api/articles/{article}
-Authorization: Bearer {token}
-Content-Type: multipart/form-data (or application/json if no file)
-
-Request parameters: same as create, all fields optional.
-
-If status changes from draft to published, published_at is set to now.
-If a new cover_image is uploaded, the old one is deleted.
-
-Response (200 OK): updated article object.
-
-### 5. Delete article
-
-DELETE /api/articles/{article}
-Authorization: Bearer {token}
-
-Also deletes:
-- All ArticleImage records associated
-- Physical image files (cover + extra images)
-
-Response (200 OK):
 {
-    "message": "Article deleted"
+  "id": 1,
+  "name": "Jean Dupont",
+  "email": "jean@example.com",
+  "is_admin": false,
+  "created_at": "2025-01-01T00:00:00.000000Z",
+  "updated_at": "2025-01-01T00:00:00.000000Z"
 }
 
----
+Articles
+Lister les articles
+GET /articles (protégé)
 
-## Comments
+Admin : voit tous les articles (publiés + brouillons) paginés par 10.
 
-| Method | Endpoint                         | Description               |
-|--------|----------------------------------|---------------------------|
-| GET    | /articles/{article}/comments     | List comments for article |
-| POST   | /articles/{article}/comments     | Add a comment             |
-| PUT    | /comments/{comment}              | Update a comment          |
-| DELETE | /comments/{comment}              | Delete a comment          |
+Non‑admin : voit uniquement ses propres articles (tous statuts) + les articles publiés des autres.
 
-### 1. List comments of an article
+Réponse (200 OK)
 
-GET /api/articles/{article}/comments
+{
+  "current_page": 1,
+  "data": [
+    {
+      "id": 1,
+      "title": "Mon article",
+      "content": "...",
+      "excerpt": "Résumé",
+      "cover_image": "covers/fichier.jpg",
+      "status": "published",
+      "published_at": "2025-01-01T10:00:00.000000Z",
+      "user_id": 1,
+      "user": { "id": 1, "name": "Jean Dupont", "email": "jean@example.com" },
+      "comments": [],
+      "images": []
+    }
+  ],
+  "total": 20
+}
 
-Response (200 OK): array of comments with user relation.
+Créer un article
+POST /articles (protégé)
+Content-Type : multipart/form-data
+
+Champ	Type	Requis	Description
+title	string	oui	Titre de l’article
+content	string	oui	Contenu HTML ou texte
+excerpt	string	non	Extrait / description courte
+cover_image	file	non	Image (max 2 Mo, formats image)
+status	string	oui	draft ou published
+
+Réponse (201 Created)
+
+{
+  "id": 1,
+  "title": "Nouvel article",
+  "content": "...",
+  "status": "draft",
+  "user_id": 1,
+  "cover_image": "covers/xxx.jpg",
+  "updated_at": "...",
+  "created_at": "..."
+}
+
+Voir un article
+GET /articles/{id} (protégé)
+
+Accès : article publié OU propriétaire OU admin.
+
+Réponse (200 OK) : (structure d’un article avec relations)
+
+Erreur (403)
+
+{ "message": "Unauthorized" }
+
+Modifier un article
+PUT /articles/{id} ou PATCH /articles/{id} (protégé)
+
+Accès : propriétaire ou admin.
+
+Paramètres (multipart/form-data, tous optionnels) : title, content, excerpt, cover_image (fichier), status.
+
+Si status passe de draft à published, published_at est automatiquement positionné à now().
+
+Réponse (200 OK) : l’article mis à jour avec ses relations.
+
+Supprimer un article
+DELETE /articles/{id} (protégé)
+
+Supprime l’article, sa cover image et toutes ses images associées.
+
+Réponse (200 OK)
+
+{ "message": "Article deleted" }
+
+Commentaires
+Lister les commentaires d’un article
+GET /articles/{id}/comments (protégé)
+
+Accès : voir l’article (publié ou propriétaire/admin).
+
+Réponse (200 OK)
 
 [
-    {
-        "id": 1,
-        "article_id": 1,
-        "user_id": 2,
-        "content": "Great post!",
-        "created_at": "...",
-        "updated_at": "...",
-        "user": {
-            "id": 2,
-            "name": "Jane Doe",
-            "email": "jane@example.com"
-        }
-    }
-]
-
-### 2. Add a comment
-
-POST /api/articles/{article}/comments
-Authorization: Bearer {token}
-Content-Type: application/json
-
-Request body:
-{
-    "content": "This is my comment"
-}
-
-Response (201 Created):
-{
-    "id": 2,
-    "article_id": 1,
-    "user_id": 1,
-    "content": "This is my comment",
-    "created_at": "...",
-    "updated_at": "...",
-    "user": { ... }
-}
-
-### 3. Update a comment
-
-PUT /api/comments/{comment}
-Authorization: Bearer {token}
-Content-Type: application/json
-
-Permission: comment author or admin only.
-
-Request body:
-{
-    "content": "Updated comment text"
-}
-
-Response (200 OK): updated comment.
-
-### 4. Delete a comment
-
-DELETE /api/comments/{comment}
-Authorization: Bearer {token}
-
-Permission: comment author or admin only.
-
-Response (200 OK):
-{
-    "message": "Comment deleted"
-}
-
----
-
-## Media (Extra Images)
-
-| Method | Endpoint                               | Description                      |
-|--------|----------------------------------------|----------------------------------|
-| POST   | /articles/{article}/images             | Upload an extra image for article|
-| DELETE | /images/{image}                        | Delete an extra image            |
-| GET    | /articles/{article}/images             | Get all extra images of article  |
-
-### 1. Upload extra image
-
-POST /api/articles/{article}/images
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
-
-Permission: article author or admin.
-
-Request field:
-- image (file, required, max 2MB)
-
-Response (201 Created):
-{
+  {
     "id": 1,
+    "content": "Super article !",
+    "user_id": 2,
     "article_id": 1,
-    "image_path": "articles/abc.jpg",
     "created_at": "...",
-    "updated_at": "..."
-}
-
-### 2. Delete extra image
-
-DELETE /api/images/{image}
-Authorization: Bearer {token}
-
-Permission: article author or admin.
-Also deletes the physical file from storage.
-
-Response (200 OK):
-{
-    "message": "Image deleted"
-}
-
-### 3. Get all extra images of an article
-
-GET /api/articles/{article}/images
-
-Response (200 OK):
-[
-    {
-        "id": 1,
-        "article_id": 1,
-        "image_path": "articles/abc.jpg",
-        "created_at": "...",
-        "updated_at": "..."
-    }
+    "user": { "id": 2, "name": "Marie" }
+  }
 ]
 
----
+Ajouter un commentaire
+POST /articles/{id}/comments (protégé)
 
-## Newsletter Subscription
+{ "content": "Mon commentaire" }
 
-| Method | Endpoint                                 | Description                        |
-|--------|------------------------------------------|------------------------------------|
-| POST   | /newsletter/subscribe                    | Subscribe with email confirmation  |
-| GET    | /newsletter/confirm/{subscriber}         | Confirm subscription (via link)    |
-| GET    | /newsletter/unsubscribe/{token}          | Unsubscribe (via link)             |
-| GET    | /admin/newsletter/subscribers            | List subscribers (admin only)      |
+Réponse (201 Created) : le commentaire avec l’utilisateur.
 
-### 1. Subscribe (request confirmation)
+Modifier un commentaire
+PUT /comments/{id} (protégé)
 
-POST /api/newsletter/subscribe
-Content-Type: application/json
+Accès : propriétaire du commentaire ou admin.
 
-Request body:
-{
-    "email": "user@example.com"
-}
+Paramètres
 
-Response (200 OK):
-{
-    "message": "Please check your email to confirm subscription.",
-    "subscriber": {
-        "email": "user@example.com",
-        "created_at": "2025-01-02T10:00:00.000000Z"
-    }
-}
+{ "content": "Nouveau texte" }
 
-An email is sent to the address with a confirmation link.
+Réponse (200 OK) : commentaire modifié avec l’utilisateur.
 
-### 2. Confirm subscription
+Supprimer un commentaire
+DELETE /comments/{id} (protégé)
 
-GET /api/newsletter/confirm/{subscriber}
+Accès : propriétaire ou admin.
 
-Example: /api/newsletter/confirm/5
+Réponse (200 OK)
 
-Response (200 OK):
-{
-    "message": "Subscription confirmed."
-}
+{ "message": "Comment deleted" }
 
-If already confirmed: "message": "Already confirmed"
+Images d’articles
+Upload d’une image
+POST /articles/{id}/images (protégé)
+Content-Type : multipart/form-data
 
-### 3. Unsubscribe
+Accès : propriétaire de l’article ou admin.
 
-GET /api/newsletter/unsubscribe/{token}
-
-Example: /api/newsletter/unsubscribe/6f4a8d2e9c...
-
-Response (200 OK):
-{
-    "message": "You have been unsubscribed."
-}
-
-### 4. List subscribers (Admin only)
-
-GET /api/admin/newsletter/subscribers?page=1
-Authorization: Bearer {token_of_admin}
-
-Response (200 OK): paginated list of verified subscribers.
+Champ	Type	Requis	Description
+image	file	oui	max 2 Mo, image
 
 {
-    "current_page": 1,
-    "data": [
-        {
-            "id": 3,
-            "email": "user@example.com",
-            "unsubscribe_token": "6f4a8d2e9c...",
-            "verified_at": "2025-01-02T10:05:00.000000Z",
-            "created_at": "2025-01-02T10:00:00.000000Z",
-            "updated_at": "2025-01-02T10:05:00.000000Z"
-        }
-    ],
-    "per_page": 20,
-    "total": 45
+  "id": 10,
+  "article_id": 1,
+  "image_path": "articles/xxx.jpg",
+  "created_at": "..."
 }
 
----
+Lister les images d’un article
+GET /articles/{id}/images (protégé)
 
-## Error Handling
+Accès : voir l’article (publié ou propriétaire/admin).
 
-Common HTTP status codes:
-- 200 – OK
-- 201 – Created
-- 403 – Unauthorized (missing permission)
-- 422 – Validation error (field format, unique, required, etc.)
+Réponse (200 OK)
 
-Validation error example (422):
+[
+  { "id": 10, "article_id": 1, "image_path": "articles/xxx.jpg" }
+]
+
+Supprimer une image
+DELETE /article-images/{id} (protégé)
+
+Accès : propriétaire de l’article parent ou admin.
+
+Réponse (200 OK)
+
+{ "message": "Image deleted" }
+
+Newsletter
+S’abonner (publique)
+POST /newsletter/subscribe
+
+Paramètres
+
+{ "email": "user@example.com" }
+
+Réponse (200 OK)
+
 {
-    "message": "The email has already been taken.",
-    "errors": {
-        "email": ["The email has already been taken."]
-    }
+  "message": "Please check your email to confirm subscription.",
+  "subscriber": { "email": "user@example.com", "created_at": "..." }
 }
 
-Unauthorized example (403):
+Un email de confirmation est envoyé.
+
+Confirmer l’abonnement
+GET /newsletter/confirm/{id} (publique)
+
+id = l’identifiant du subscriber.
+Met verified_at à la date courante.
+
+Réponse (200 OK)
+
+{ "message": "Subscription confirmed." }
+
+Se désabonner
+GET /newsletter/unsubscribe/{token} (publique)
+
+token = le token de désabonnement généré à l’inscription.
+Supprime l’enregistrement.
+
+Réponse (200 OK)
+
+{ "message": "You have been unsubscribed." }
+
+Liste des abonnés (admin)
+GET /admin/subscribers (protégé, admin uniquement)
+
+Réponse (200 OK) : pagination (20 par défaut) des abonnés vérifiés.
+
 {
-    "message": "Unauthorized"
+  "current_page": 1,
+  "data": [
+    { "id": 1, "email": "user@ex.com", "verified_at": "...", "created_at": "..." }
+  ],
+  "total": 45
 }
 
----
+Gestion des utilisateurs
+Lister tous les utilisateurs
+GET /users (protégé, admin uniquement)
 
-## Notes
+Réponse (200 OK) : pagination (20 par défaut)
 
-- All timestamps are in UTC and follow ISO 8601 format.
-- The slug field is automatically generated from the title and is unique per article.
-- File uploads are stored in the public disk (symbolic link required: php artisan storage:link).
-- Subscriber confirmation uses a simple id in the URL; you may want to replace it with a signed URL in production for extra security.
+{
+  "data": [
+    { "id": 1, "name": "Admin", "email": "admin@ex.com", "is_admin": true, "created_at": "..." }
+  ]
+}
 
----
+Créer un utilisateur (admin)
+POST /users (protégé, admin uniquement)
 
-## Database Schema (Simplified)
+Paramètres JSON
 
-users – id, name, email, password, is_admin, timestamps
-articles – id, user_id, title, slug, content, excerpt, cover_image, status, published_at, timestamps
-comments – id, article_id, user_id, content, timestamps
-article_images – id, article_id, image_path, timestamps
-subscribers – id, email, unsubscribe_token, verified_at, timestamps
+{
+  "name": "Nouvel User",
+  "email": "new@ex.com",
+  "password": "secret123",
+  "password_confirmation": "secret123",
+  "is_admin": false
+}
 
-*Cette API est faite en Laravel 13 et suit toutes les conventions REST.*
+is_admin est optionnel (false par défaut).
+
+Réponse (201 Created)
+
+{
+  "message": "Utilisateur créé avec succès",
+  "user": { "id": 2, "name": "Nouvel User", "email": "new@ex.com", "is_admin": false }
+}
+
+Voir un utilisateur
+GET /users/{id} (protégé)
+
+Accès : admin OU l’utilisateur lui-même.
+
+Réponse (200 OK) : champs id, name, email, is_admin, created_at.
+
+Modifier un utilisateur
+PUT /users/{id} (protégé)
+
+Accès :
+
+Admin : peut modifier name, email, password, is_admin.
+
+Utilisateur standard (lui-même) : peut modifier name, email et password (nécessite current_password).
+
+Paramètres possibles (tous optionnels) :
+
+{
+  "name": "Nouveau nom",
+  "email": "newmail@ex.com",
+  "current_password": "ancien_mot_de_passe",
+  "password": "nouveau_mot_de_passe",
+  "password_confirmation": "nouveau_mot_de_passe",
+  "is_admin": true
+}
+
+Réponse (200 OK)
+
+{
+  "message": "Utilisateur mis à jour avec succès",
+  "user": { "id": 1, "name": "...", "email": "...", "is_admin": false }
+}
+
+Supprimer un utilisateur
+DELETE /users/{id} (protégé, admin uniquement)
+
+Un admin ne peut pas supprimer son propre compte.
+
+Réponse (200 OK)
+
+{ "message": "Utilisateur supprimé avec succès" }
+
+Santé
+GET /health (publique)
+
+Vérifie la connexion à la base de données.
+
+Réponse (200 OK)
+
+{
+  "status": "OK",
+  "database": "Connected",
+  "timestamp": "2025-01-01 12:00:00"
+}
+
+Réponse (500 en cas d’échec)
+
+{
+  "status": "ERROR",
+  "database": "Disconnected",
+  "error": "..."
+}
