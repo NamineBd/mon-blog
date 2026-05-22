@@ -105,6 +105,6 @@ onMounted(async () => {
 })
 
 definePageMeta({
-  middleware: 'auth'
+  // middleware: 'auth'
 })
 </script>

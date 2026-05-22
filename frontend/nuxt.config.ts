@@ -1,6 +1,7 @@
 export default defineNuxtConfig({
   // Nuxt 3 - PAS de "app/" directory
   devtools: { enabled: true },
+  compatibilityDate: '2026-05-21',
 
   modules: [
     '@pinia/nuxt',
