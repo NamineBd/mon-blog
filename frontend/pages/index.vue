@@ -7,7 +7,7 @@
         <p class="text-xl text-indigo-100 mb-8 max-w-2xl">
           Découvrez des articles captivants, partagez vos idées et rejoignez notre communauté de blogueurs passionnés.
         </p>
-        <div class="flex gap-4">
+        <div class="flex gap-4 flex-wrap">
           <NuxtLink to="/articles" class="btn bg-white text-indigo-600 font-bold hover:bg-gray-100">
             Lire les articles
           </NuxtLink>
@@ -28,7 +28,7 @@
       </div>
 
       <div v-if="articleStore.isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div v-for="i in 3" :key="i" class="card h-64 animate-pulse bg-gray-200"></div>
+        <div v-for="i in 3" :key="i" class="h-64 rounded-xl animate-pulse bg-gray-200"></div>
       </div>
 
       <div v-else-if="articleStore.articles.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -40,7 +40,8 @@
       </div>
 
       <div v-else class="card text-center py-12">
-        <p class="text-gray-500">Aucun article pour le moment. Revenez bientôt!</p>
+        <p class="text-gray-500 mb-4">Aucun article pour le moment. Commencez à écrire!</p>
+        <NuxtLink to="/articles/create" class="btn-primary">Créer le premier article</NuxtLink>
       </div>
     </section>
 
@@ -60,15 +61,15 @@
     <!-- Stats -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div class="card text-center">
-        <div class="text-4xl font-bold text-indigo-600 mb-2">{{ articleStore.pagination.total }}</div>
+        <div class="text-4xl font-bold text-indigo-600 mb-2">{{ articleStore.pagination.total || '—' }}</div>
         <p class="text-gray-600">Articles publiés</p>
       </div>
       <div class="card text-center">
-        <div class="text-4xl font-bold text-indigo-600 mb-2">1000+</div>
-        <p class="text-gray-600">Lecteurs actifs</p>
+        <div class="text-4xl font-bold text-indigo-600 mb-2">∞</div>
+        <p class="text-gray-600">Idées à partager</p>
       </div>
       <div class="card text-center">
-        <div class="text-4xl font-bold text-indigo-600 mb-2">500+</div>
+        <div class="text-4xl font-bold text-indigo-600 mb-2">{{ newsletterStore.pagination.total || '—' }}</div>
         <p class="text-gray-600">Abonnés newsletter</p>
       </div>
     </section>
@@ -76,22 +77,12 @@
 </template>
 
 <script setup lang="ts">
-const authStore = useAuthStore()
 const articleStore = useArticleStore()
-const router = useRouter()
+const newsletterStore = useNewsletterStore()
 
+// Le middleware global gère déjà la protection de la route.
+// On charge les données directement.
 onMounted(async () => {
-  authStore.loadFromStorage()
-
-  if (!authStore.isAuthenticated) {
-    router.push('/auth/login')
-    return
-  }
-
   await articleStore.fetchArticles()
-})
-
-definePageMeta({
-  middleware: 'auth'
 })
 </script>

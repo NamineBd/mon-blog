@@ -1,4 +1,14 @@
+import type { Config } from 'tailwindcss'
+
 export default {
+  content: [
+    './components/**/*.{vue,js,ts}',
+    './layouts/**/*.{vue,js,ts}',
+    './pages/**/*.{vue,js,ts}',
+    './app.vue',
+    './plugins/**/*.{js,ts}',
+    './error.vue',
+  ],
   theme: {
     extend: {
       colors: {
@@ -15,4 +25,4 @@ export default {
   plugins: [
     require('@tailwindcss/forms'),
   ],
-}
+} satisfies Config
