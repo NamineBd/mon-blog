@@ -1,22 +1,26 @@
 export default defineNuxtConfig({
-  // Nuxt 4 - compatibilité future activée
-  future: {
-    compatibilityVersion: 4
-  },
-
-  compatibilityDate: '2024-11-01',
-
+  // Nuxt 3 - PAS de "app/" directory
   devtools: { enabled: true },
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  modules: [
+    '@pinia/nuxt',
+    '@nuxtjs/tailwindcss'
+  ],
+
+  css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://mon-blog.test/api'
+    }
+  },
 
   app: {
     head: {
       title: 'BlogHub',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Plateforme de blog moderne' }
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -29,16 +33,8 @@ export default defineNuxtConfig({
     }
   },
 
-  css: ['~/assets/css/main.css'],
-
-  runtimeConfig: {
-    public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://mon-blog.test/api'
-    }
-  },
-
-  // Pinia - auto-import des stores
-  pinia: {
-    storesDirs: ['./app/stores/**']
+  // Auto-import des stores Pinia
+  imports: {
+    dirs: ['stores']
   }
 })

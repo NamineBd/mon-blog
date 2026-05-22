@@ -6,192 +6,125 @@ export const useArticleStore = defineStore('articles', {
     currentArticle: null as any,
     isLoading: false,
     error: null as string | null,
-    pagination: {
-      current_page: 1,
-      total: 0,
-      last_page: 1
-    }
+    pagination: { current_page: 1, total: 0, last_page: 1 }
   }),
 
   actions: {
-    async fetchArticles(page: number = 1) {
+    async fetchArticles(page = 1) {
       this.isLoading = true
       this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const response = await $fetch('/articles', {
-          query: { page }
-        })
-
-        this.articles = response.data
-        this.pagination = {
-          current_page: response.current_page,
-          total: response.total,
-          last_page: response.last_page
-        }
-
-        return response
+        const { $apiFetch } = useNuxtApp()
+        const res: any = await $apiFetch('/articles', { query: { page } })
+        this.articles = res.data
+        this.pagination = { current_page: res.current_page, total: res.total, last_page: res.last_page }
+        return res
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors du chargement des articles'
+        this.error = err.data?.message || 'Erreur chargement articles'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async fetchArticleById(id: number) {
       this.isLoading = true
       this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const article = await $fetch(`/articles/${id}`)
+        const { $apiFetch } = useNuxtApp()
+        const article: any = await $apiFetch(`/articles/${id}`)
         this.currentArticle = article
         return article
       } catch (err: any) {
         this.error = err.data?.message || 'Article non trouvé'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async createArticle(data: any) {
       this.isLoading = true
       this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const formData = new FormData()
-        
-        formData.append('title', data.title)
-        formData.append('content', data.content)
-        if (data.excerpt) formData.append('excerpt', data.excerpt)
-        if (data.cover_image) formData.append('cover_image', data.cover_image)
-        formData.append('status', data.status)
-
-        const article = await $fetch('/articles', {
-          method: 'POST',
-          body: formData
-        })
-
+        const { $apiFetch } = useNuxtApp()
+        const fd = new FormData()
+        fd.append('title', data.title)
+        fd.append('content', data.content)
+        fd.append('status', data.status)
+        if (data.excerpt) fd.append('excerpt', data.excerpt)
+        if (data.cover_image) fd.append('cover_image', data.cover_image)
+        const article: any = await $apiFetch('/articles', { method: 'POST', body: fd })
         this.articles.unshift(article)
         return article
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la création'
+        this.error = err.data?.message || 'Erreur création article'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async updateArticle(id: number, data: any) {
       this.isLoading = true
       this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const formData = new FormData()
-
-        if (data.title) formData.append('title', data.title)
-        if (data.content) formData.append('content', data.content)
-        if (data.excerpt) formData.append('excerpt', data.excerpt)
-        if (data.cover_image) formData.append('cover_image', data.cover_image)
-        if (data.status) formData.append('status', data.status)
-
-        const article = await $fetch(`/articles/${id}`, {
-          method: 'PATCH',
-          body: formData
-        })
-
-        const index = this.articles.findIndex(a => a.id === id)
-        if (index !== -1) this.articles[index] = article
-
-        if (this.currentArticle?.id === id) {
-          this.currentArticle = article
-        }
-
+        const { $apiFetch } = useNuxtApp()
+        const fd = new FormData()
+        if (data.title) fd.append('title', data.title)
+        if (data.content) fd.append('content', data.content)
+        if (data.excerpt) fd.append('excerpt', data.excerpt)
+        if (data.status) fd.append('status', data.status)
+        if (data.cover_image) fd.append('cover_image', data.cover_image)
+        const article: any = await $apiFetch(`/articles/${id}`, { method: 'POST', body: fd, query: { _method: 'PATCH' } })
+        const idx = this.articles.findIndex(a => a.id === id)
+        if (idx !== -1) this.articles[idx] = article
+        if (this.currentArticle?.id === id) this.currentArticle = article
         return article
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la modification'
+        this.error = err.data?.message || 'Erreur modification article'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async deleteArticle(id: number) {
       this.isLoading = true
       this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        await $fetch(`/articles/${id}`, { method: 'DELETE' })
-
+        const { $apiFetch } = useNuxtApp()
+        await $apiFetch(`/articles/${id}`, { method: 'DELETE' })
         this.articles = this.articles.filter(a => a.id !== id)
-        
-        if (this.currentArticle?.id === id) {
-          this.currentArticle = null
-        }
-
+        if (this.currentArticle?.id === id) this.currentArticle = null
         return true
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la suppression'
+        this.error = err.data?.message || 'Erreur suppression article'
         return false
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async uploadArticleImage(articleId: number, file: File) {
       this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const formData = new FormData()
-        formData.append('image', file)
-
-        const image = await $fetch(`/articles/${articleId}/images`, {
-          method: 'POST',
-          body: formData
-        })
-
+        const { $apiFetch } = useNuxtApp()
+        const fd = new FormData()
+        fd.append('image', file)
+        const image: any = await $apiFetch(`/articles/${articleId}/images`, { method: 'POST', body: fd })
         if (this.currentArticle?.id === articleId) {
-          if (!this.currentArticle.images) {
-            this.currentArticle.images = []
-          }
+          if (!this.currentArticle.images) this.currentArticle.images = []
           this.currentArticle.images.push(image)
         }
-
         return image
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de l\'upload'
+        this.error = err.data?.message || 'Erreur upload image'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async deleteArticleImage(imageId: number) {
-      this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        await $fetch(`/article-images/${imageId}`, { method: 'DELETE' })
-
+        const { $apiFetch } = useNuxtApp()
+        await $apiFetch(`/article-images/${imageId}`, { method: 'DELETE' })
         if (this.currentArticle?.images) {
           this.currentArticle.images = this.currentArticle.images.filter((img: any) => img.id !== imageId)
         }
-
         return true
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la suppression'
+        this.error = err.data?.message || 'Erreur suppression image'
         return false
-      } finally {
-        this.isLoading = false
       }
     }
   }

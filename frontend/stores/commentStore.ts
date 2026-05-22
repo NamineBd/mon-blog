@@ -10,87 +10,58 @@ export const useCommentStore = defineStore('comments', {
   actions: {
     async fetchArticleComments(articleId: number) {
       this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const comments = await $fetch(`/articles/${articleId}/comments`)
+        const { $apiFetch } = useNuxtApp()
+        const comments: any = await $apiFetch(`/articles/${articleId}/comments`)
         this.comments = comments
         return comments
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors du chargement des commentaires'
+        this.error = err.data?.message || 'Erreur chargement commentaires'
         return []
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async createComment(articleId: number, content: string) {
       this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const comment = await $fetch(`/articles/${articleId}/comments`, {
-          method: 'POST',
-          body: { content }
+        const { $apiFetch } = useNuxtApp()
+        const comment: any = await $apiFetch(`/articles/${articleId}/comments`, {
+          method: 'POST', body: { content }
         })
-
         this.comments.unshift(comment)
         return comment
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la création du commentaire'
+        this.error = err.data?.message || 'Erreur création commentaire'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async updateComment(commentId: number, content: string) {
       this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        const comment = await $fetch(`/comments/${commentId}`, {
-          method: 'PUT',
-          body: { content }
+        const { $apiFetch } = useNuxtApp()
+        const comment: any = await $apiFetch(`/comments/${commentId}`, {
+          method: 'PUT', body: { content }
         })
-
-        const index = this.comments.findIndex(c => c.id === commentId)
-        if (index !== -1) {
-          this.comments[index] = comment
-        }
-
+        const idx = this.comments.findIndex(c => c.id === commentId)
+        if (idx !== -1) this.comments[idx] = comment
         return comment
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la modification'
+        this.error = err.data?.message || 'Erreur modification commentaire'
         return null
-      } finally {
-        this.isLoading = false
-      }
+      } finally { this.isLoading = false }
     },
 
     async deleteComment(commentId: number) {
-      this.isLoading = true
-      this.error = null
-
       try {
-        const { $fetch } = useNuxtApp()
-        await $fetch(`/comments/${commentId}`, { method: 'DELETE' })
-
+        const { $apiFetch } = useNuxtApp()
+        await $apiFetch(`/comments/${commentId}`, { method: 'DELETE' })
         this.comments = this.comments.filter(c => c.id !== commentId)
         return true
       } catch (err: any) {
-        this.error = err.data?.message || 'Erreur lors de la suppression'
+        this.error = err.data?.message || 'Erreur suppression commentaire'
         return false
-      } finally {
-        this.isLoading = false
       }
-    },
-
-    clearComments() {
-      this.comments = []
     }
   }
 })

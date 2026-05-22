@@ -1,33 +1,34 @@
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
+  const authStore = useAuthStore()
 
   const apiFetch = $fetch.create({
-    baseURL: config.public.apiBase as string,
+    baseURL: config.public.apiBase,
 
     onRequest({ options }) {
-      // Lire le token depuis localStorage côté client
-      if (process.client) {
-        const token = localStorage.getItem('token')
-        if (token) {
-          const headers = new Headers(options.headers as HeadersInit)
-          headers.set('Authorization', `Bearer ${token}`)
-          options.headers = headers
+      const token = authStore.token ?? (process.client ? localStorage.getItem('token') : null)
+      if (token) {
+        options.headers = {
+          ...options.headers,
+          Authorization: `Bearer ${token}`
         }
       }
     },
 
-    onResponseError({ response }) {
-      if (response.status === 401 && process.client) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        navigateTo('/auth/login')
+    async onResponseError({ response }) {
+      if (response.status === 401) {
+        authStore.token = null
+        authStore.user = null
+        if (process.client) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        }
+        await navigateTo('/auth/login')
       }
     }
   })
 
   return {
-    provide: {
-      fetch: apiFetch
-    }
+    provide: { apiFetch }
   }
 })

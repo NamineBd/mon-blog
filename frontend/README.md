@@ -1,75 +1,40 @@
-# Nuxt Content Starter
+# BlogHub - Frontend Nuxt 3
 
-Look at the [Nuxt Content documentation](https://content.nuxt.com) to learn more.
+## ⚡ Installation rapide
 
-## Setup
+### 1. Copiez tous ces fichiers dans votre projet Nuxt 3 existant
+```
+Votre projet Nuxt 3/
+├── app.vue                ← remplacer
+├── nuxt.config.ts         ← remplacer
+├── package.json           ← remplacer
+├── tailwind.config.ts     ← remplacer
+├── tsconfig.json          ← remplacer
+├── .env.example           ← copier
+├── assets/css/main.css    ← créer le dossier
+├── components/            ← copier tout
+├── composables/           ← copier tout
+├── layouts/               ← copier tout
+├── middleware/            ← copier tout
+├── pages/                 ← copier tout
+├── plugins/               ← copier tout
+└── stores/                ← copier tout
+```
 
-Make sure to install dependencies:
+### 2. Configurer l'URL de l'API
+Créez un fichier `.env` à la racine :
+```env
+NUXT_PUBLIC_API_BASE=http://mon-blog.test/api
+```
 
+### 3. Installer les dépendances
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
+### 4. Lancer
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Accédez à **http://localhost:3000** → vous serez redirigé vers `/auth/login`

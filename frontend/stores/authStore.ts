@@ -11,58 +11,57 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state): boolean => !!state.token,
     isAdmin: (state): boolean => !!state.user?.is_admin,
-    currentUser: (state): any => state.user
+    currentUser: (state) => state.user
   },
 
   actions: {
     loadFromStorage() {
-      if (process.client) {
-        const token = localStorage.getItem('token')
-        const userRaw = localStorage.getItem('user')
-        if (token && userRaw) {
-          try {
-            this.token = token
-            this.user = JSON.parse(userRaw)
-          } catch {
-            this.token = null
-            this.user = null
-          }
+      if (!process.client) return
+      const token = localStorage.getItem('token')
+      const user = localStorage.getItem('user')
+      if (token && user) {
+        try {
+          this.token = token
+          this.user = JSON.parse(user)
+        } catch {
+          this.token = null
+          this.user = null
         }
       }
     },
 
-    saveToStorage() {
-      if (process.client && this.token && this.user) {
-        localStorage.setItem('token', this.token)
-        localStorage.setItem('user', JSON.stringify(this.user))
-      }
+    _save() {
+      if (!process.client) return
+      localStorage.setItem('token', this.token!)
+      localStorage.setItem('user', JSON.stringify(this.user))
     },
 
-    clearStorage() {
-      if (process.client) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-      }
+    _clear() {
+      if (!process.client) return
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
     },
 
     async register(name: string, email: string, password: string, passwordConfirmation: string) {
       this.isLoading = true
       this.error = null
       try {
-        const { $fetch: api } = useNuxtApp()
-        const res: any = await api('/register', {
+        const { $apiFetch } = useNuxtApp()
+        const res: any = await $apiFetch('/register', {
           method: 'POST',
           body: { name, email, password, password_confirmation: passwordConfirmation }
         })
         this.user = res.user
         this.token = res.token
-        this.saveToStorage()
+        this._save()
         return true
       } catch (err: any) {
         const errors = err.data?.errors
-        this.error = errors
-          ? Object.values(errors).flat()[0] as string
-          : (err.data?.message || 'Erreur lors de l\'inscription')
+        if (errors) {
+          this.error = Object.values(errors).flat()[0] as string
+        } else {
+          this.error = err.data?.message || 'Erreur lors de l\'inscription'
+        }
         return false
       } finally {
         this.isLoading = false
@@ -73,20 +72,22 @@ export const useAuthStore = defineStore('auth', {
       this.isLoading = true
       this.error = null
       try {
-        const { $fetch: api } = useNuxtApp()
-        const res: any = await api('/login', {
+        const { $apiFetch } = useNuxtApp()
+        const res: any = await $apiFetch('/login', {
           method: 'POST',
           body: { email, password }
         })
         this.user = res.user
         this.token = res.token
-        this.saveToStorage()
+        this._save()
         return true
       } catch (err: any) {
         const errors = err.data?.errors
-        this.error = errors
-          ? Object.values(errors).flat()[0] as string
-          : (err.data?.message || 'Email ou mot de passe incorrect')
+        if (errors) {
+          this.error = Object.values(errors).flat()[0] as string
+        } else {
+          this.error = err.data?.message || 'Email ou mot de passe incorrect'
+        }
         return false
       } finally {
         this.isLoading = false
@@ -95,15 +96,13 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        const { $fetch: api } = useNuxtApp()
-        await api('/logout', { method: 'POST' })
-      } catch { /* ignore */ } finally {
-        this.user = null
-        this.token = null
-        this.error = null
-        this.clearStorage()
-        this.isLoading = false
-      }
+        const { $apiFetch } = useNuxtApp()
+        await $apiFetch('/logout', { method: 'POST' })
+      } catch { /* ignore */ }
+      this.user = null
+      this.token = null
+      this.error = null
+      this._clear()
     },
 
     setError(msg: string | null) {
