@@ -50,7 +50,7 @@
       <!-- Image de couverture -->
       <div v-if="article.cover_image" class="mb-8">
         <img
-          :src="`${apiBase}/storage/${article.cover_image}`"
+          :src="getImageUrl(article.cover_image)"
           :alt="article.title"
           class="w-full h-96 object-cover rounded-lg"
         />
@@ -73,7 +73,7 @@
             class="relative group"
           >
             <img
-              :src="`${apiBase}/storage/${image.image_path}`"
+              :src="getImageUrl(image.image_path)"
               :alt="article.title"
               class="w-full h-64 object-cover rounded-lg"
             />
@@ -180,6 +180,7 @@ const commentStore = useCommentStore()
 const { success, error } = useNotification()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
+const backendUrl = config.public.backendUrl
 
 const article = computed(() => articleStore.currentArticle)
 const newComment = ref('')
@@ -188,6 +189,13 @@ const canEditArticle = computed(() => {
   if (!article.value || !authStore.currentUser) return false
   return authStore.isAdmin || article.value.user_id === authStore.currentUser.id
 })
+
+const getImageUrl = (path: string | null | undefined) => {
+  if (!path) return null
+  // Nettoie le chemin au cas où il contiendrait déjà 'storage/'
+  const cleanPath = path.replace(/^\/?storage\//, '')
+  return `${backendUrl}/storage/${cleanPath}`
+}
 
 const canEditComment = (comment: any) => {
   if (!authStore.currentUser) return false

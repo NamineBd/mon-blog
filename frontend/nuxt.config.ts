@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://mon-blog.test/api'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://mon-blog.test/api',
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://mon-blog.test',
     }
   },
 

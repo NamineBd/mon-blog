@@ -4,7 +4,7 @@
       <!-- Image -->
       <div v-if="article.cover_image" class="relative overflow-hidden h-48 bg-gray-200">
         <img
-          :src="`${apiBase}/storage/${article.cover_image}`"
+          :src="getImageUrl(article.cover_image)"
           :alt="article.title"
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -40,19 +40,21 @@
         </p>
 
         <!-- Meta -->
-        <div class="flex items-center justify-between text-sm text-gray-500">
-          <div class="flex items-center gap-2">
-            <img
-              v-if="article.user"
-              :src="`https://ui-avatars.com/api/?name=${article.user.name}`"
-              :alt="article.user.name"
-              class="w-6 h-6 rounded-full"
-            />
-            <span>{{ article.user?.name }}</span>
+        <!-- Meta : avatar à gauche, nom + date en colonne à droite -->
+        <div class="flex items-center gap-3 text-sm mt-5 text-gray-600">
+          <img
+            v-if="article.user"
+            :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(article.user.name)}&background=6366f1&color=fff&size=6`"
+            :alt="article.user.name"
+            class="w-7 h-7 rounded-full"
+          />
+          <div class="flex items-center gap-2 text-xs">
+            <span class="font-medium text-gray-900">{{ article.user?.name }}</span>
+            <span class="text-gray-400">•</span>
+            <time :datetime="article.published_at || article.created_at" class="text-gray-500 text-xs mt-0.5">
+              {{ formatDate(article.published_at || article.created_at) }}
+            </time>
           </div>
-          <time :datetime="article.published_at || article.created_at">
-            {{ formatDate(article.published_at || article.created_at) }}
-          </time>
         </div>
       </div>
     </div>
@@ -62,6 +64,7 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
+const backendUrl = config.public.backendUrl
 
 interface Article {
   id: number
@@ -87,5 +90,12 @@ const formatDate = (date: string) => {
     month: 'long',
     day: 'numeric'
   }).format(new Date(date))
+}
+
+const getImageUrl = (path: string | null | undefined) => {
+  if (!path) return null
+  // Supprime un éventuel 'storage/' en trop
+  const cleanPath = path.replace(/^\/?storage\//, '')
+  return `${backendUrl}/storage/${cleanPath}`
 }
 </script>
