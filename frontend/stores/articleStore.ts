@@ -86,7 +86,7 @@ export const useArticleStore = defineStore('articles', {
       this.error = null
       try {
         const { $apiFetch } = useNuxtApp()
-        await $apiFetch(`/articles/${id}`, { method: 'DELETE' })
+        await $apiFetch(`/article-images/${id}`, { method: 'DELETE' })
         this.articles = this.articles.filter(a => a.id !== id)
         if (this.currentArticle?.id === id) this.currentArticle = null
         return true

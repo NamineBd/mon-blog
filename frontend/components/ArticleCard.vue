@@ -1,16 +1,17 @@
 <template>
-  <NuxtLink :to="`/articles/${article.id}`">
-    <div class="article-card group">
+  <NuxtLink :to="`/articles/${article.id}`" class="block">
+    <div class="article-card group overflow-hidden">
       <!-- Image -->
-      <div v-if="article.cover_image" class="relative overflow-hidden h-48 bg-gray-200">
+      <div v-if="article.cover_image" class="relative h-48 overflow-hidden bg-gray-200">
         <img
           :src="getImageUrl(article.cover_image)"
           :alt="article.title"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>
-      <div v-else class="h-48 bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
-        <svg class="w-12 h-12 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+
+      <div v-else class="flex h-48 items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500">
+        <svg class="h-12 w-12 text-white/50" fill="currentColor" viewBox="0 0 20 20">
           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
         </svg>
       </div>
@@ -18,7 +19,7 @@
       <!-- Contenu -->
       <div class="p-6">
         <!-- Status -->
-        <div class="flex gap-2 mb-3">
+        <div class="mb-3 flex gap-2">
           <span
             :class="[
               'badge',
@@ -30,28 +31,34 @@
         </div>
 
         <!-- Titre -->
-        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition">
+        <h3 class="mb-2 line-clamp-2 text-xl font-bold text-gray-900 transition group-hover:text-indigo-600">
           {{ article.title }}
         </h3>
 
         <!-- Extrait -->
-        <p v-if="article.excerpt" class="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p v-if="article.excerpt" class="mb-4 line-clamp-2 text-sm text-gray-600">
           {{ article.excerpt }}
         </p>
 
         <!-- Meta -->
-        <!-- Meta : avatar à gauche, nom + date en colonne à droite -->
-        <div class="flex items-center gap-3 text-sm mt-5 text-gray-600">
-          <img
+        <div class="mt-5 flex items-center gap-3 text-sm text-gray-600">
+          <div
             v-if="article.user"
-            :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(article.user.name)}&background=6366f1&color=fff&size=6`"
-            :alt="article.user.name"
-            class="w-7 h-7 rounded-full"
-          />
-          <div class="flex items-center gap-2 text-xs">
-            <span class="font-medium text-gray-900">{{ article.user?.name }}</span>
-            <span class="text-gray-400">•</span>
-            <time :datetime="article.published_at || article.created_at" class="text-gray-500 text-xs mt-0.5">
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white"
+            :title="article.user.name"
+          >
+            {{ getInitials(article.user.name) }}
+          </div>
+
+          <div class="min-w-0">
+            <div class="truncate text-xs font-medium text-gray-900">
+              {{ article.user?.name || 'Auteur inconnu' }}
+            </div>
+
+            <time
+              :datetime="article.published_at || article.created_at"
+              class="block text-xs text-gray-500"
+            >
               {{ formatDate(article.published_at || article.created_at) }}
             </time>
           </div>
@@ -63,7 +70,6 @@
 
 <script setup lang="ts">
 const config = useRuntimeConfig()
-const apiBase = config.public.apiBase
 const backendUrl = config.public.backendUrl
 
 interface Article {
@@ -93,9 +99,17 @@ const formatDate = (date: string) => {
 }
 
 const getImageUrl = (path: string | null | undefined) => {
-  if (!path) return null
-  // Supprime un éventuel 'storage/' en trop
+  if (!path) return ''
   const cleanPath = path.replace(/^\/?storage\//, '')
   return `${backendUrl}/storage/${cleanPath}`
+}
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('')
 }
 </script>
